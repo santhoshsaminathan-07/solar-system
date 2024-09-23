@@ -13,6 +13,7 @@ pipeline {
         disableResume()
         disableConcurrentBuilds abortPrevious: true
     }
+
     stages {
         stage('Installing Dependencies') {
             options { timestamps() }
@@ -60,5 +61,13 @@ pipeline {
                 junit allowEmptyResults: true, stdioRetention: '', testResults: 'test-results.xml' 
             }
         }    
+
+        stage('Code Coverage') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'mongo-db-credentials', passwordVariable: 'MONGO_PASSWORD', usernameVariable: 'MONGO_USERNAME')]) {
+                    sh 'npm run coverage'
+                }
+            }
+        }  
     }
 }
