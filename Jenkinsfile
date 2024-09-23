@@ -5,14 +5,19 @@ pipeline {
         nodejs 'nodejs-22-6-0'
     }
 
-    // environment {
-    //     MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
-    // }
+    environment {
+        MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
+    }
 
+    options {
+        disableResume()
+        disableConcurrentBuilds abortPrevious: true
+    }
     stages {
         stage('Installing Dependencies') {
             options { timestamps() }
             steps {
+                sh 'sleep 100s'
                 sh 'npm install --no-audit'
             }
         }
