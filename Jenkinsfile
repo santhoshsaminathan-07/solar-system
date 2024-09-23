@@ -43,6 +43,7 @@ pipeline {
                             --scan \'./\' 
                             --out \'./\'  
                             --format \'ALL\' 
+                            --disableYarnAudit \
                             --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'
 
                         dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
@@ -71,15 +72,18 @@ pipeline {
 
         stage('SAST - SonarQube') {
             steps {
-                sh 'echo $SONAR_SCANNER_HOME'
-                sh '''
-                    $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=Solar-System-Project \
-                        -Dsonar.sources=app.js \
-                        -Dsonar.host.url=http://64.227.187.25:9000 \
-                        -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
-                        -Dsonar.login=sqp_54484dbbbe3a5b3b3088c734cf5e4c3bbeba3fd6
-                '''
+                timeout(time: 60, unit: 'SECONDS') {
+                    withSonarQubeEnv('sonar-qube-server') {
+                        sh 'echo $SONAR_SCANNER_HOME'
+                        sh '''
+                            $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                                -Dsonar.projectKey=Solar-System-Project \
+                                -Dsonar.sources=app.js \
+                                -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+                        '''
+                    }
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }  
     }
