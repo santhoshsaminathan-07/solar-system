@@ -5,9 +5,9 @@ pipeline {
         nodejs 'nodejs-22-6-0'
     }
 
-    environment {
-    //    MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
-    }
+    // environment {
+    //     MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
+    // }
 
     stages {
         stage('Installing Dependencies') {
