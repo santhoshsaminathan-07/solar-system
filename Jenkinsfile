@@ -46,10 +46,6 @@ pipeline {
                             --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'
 
                         dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
-
-                        junit allowEmptyResults: true, stdioRetention: '', testResults: 'dependency-check-junit.xml' 
-
-                        publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true, reportDir: './', reportFiles: 'dependency-check-jenkins.html', reportName: 'Dependency Check HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                     }
                 }
             }
@@ -81,6 +77,7 @@ pipeline {
                         -Dsonar.projectKey=Solar-System-Project \
                         -Dsonar.sources=app.js \
                         -Dsonar.host.url=http://64.227.187.25:9000 \
+                        -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
                         -Dsonar.login=sqp_54484dbbbe3a5b3b3088c734cf5e4c3bbeba3fd6
                 '''
             }
