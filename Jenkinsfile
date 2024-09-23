@@ -8,6 +8,8 @@ pipeline {
     environment {
         MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
         MONGO_DB_CREDS = credentials('mongo-db-credentials')
+        MONGO_USERNAME = credentials('mongo-db-username')
+        MONGO_PASSWORD = credentials('mongo-db-password')
     }
 
     options {
@@ -58,8 +60,7 @@ pipeline {
                 sh 'echo Colon-Separated - $MONGO_DB_CREDS'
                 sh 'echo Username - $MONGO_DB_CREDS_USR'
                 sh 'echo Password - $MONGO_DB_CREDS_PSW'
-                sh 'npm test'
-                junit allowEmptyResults: true, stdioRetention: '', testResults: 'test-results.xml' 
+                sh 'npm test' 
             }
         }    
 
@@ -68,8 +69,16 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', message: 'Oops! it will be fixed in future releases', stageResult: 'UNSTABLE') {
                     sh 'npm run coverage'
                 }
-                publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'coverage/lcov-report', reportFiles: 'index.html', reportName: 'Code Coverage HTML Report', reportTitles: '', useWrapperFileDirectly: true])
             }
         }  
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, stdioRetention: '', testResults: 'test-results.xml'
+            junit allowEmptyResults: true, stdioRetention: '', testResults: 'dependency-check-junit.xml' 
+            publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true, reportDir: './', reportFiles: 'dependency-check-jenkins.html', reportName: 'Dependency Check HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+            publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'coverage/lcov-report', reportFiles: 'index.html', reportName: 'Code Coverage HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+        }
     }
 }
