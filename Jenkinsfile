@@ -185,7 +185,7 @@ pipeline {
             }
         }
 
-        stage('K8S Update Image Tag') {
+        stage('K8S - Update Image Tag') {
             when {
                 branch 'PR*'
             }
@@ -209,6 +209,31 @@ pipeline {
                 }
             }
         }
+
+        stage('K8S - Raise PR') {
+            when {
+                branch 'PR*'
+            }
+            steps {
+                sh """
+                    curl -X 'POST' \
+                        'http://64.227.187.25:5555/api/v1/repos/dasher-org/solar-system-gitops-argocd/pulls' \
+                        -H 'accept: application/json' \
+                        -H 'Authorization: token $GITEA_TOKEN' \
+                        -H 'Content-Type: application/json' \
+                        -d '{
+                            "assignee": "gitea-admin",
+                                "assignees": [
+                                    "gitea-admin"
+                                ],
+                            "base": "main",
+                            "body": "Updated docker image in deployment manifest",
+                            "head": "feature-$BUILD_ID",
+                            "title": "Updated Docker Image"
+                        }'
+                """
+            }
+        } 
     }
 
     post {
