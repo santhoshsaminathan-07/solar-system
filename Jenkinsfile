@@ -163,10 +163,10 @@ pipeline {
                                             -p 3000:3000 -d siddharth67/solar-system:$GIT_COMMIT
                                 "
                             '''
-                        }
                     }
                 }
             }
+            
         }
     }
 
