@@ -99,7 +99,7 @@ pipeline {
             steps {
                 sh  ''' 
                     trivy image siddharth67/solar-system:$GIT_COMMIT \
-                        --severity LOW,MEDIU,HIGH \
+                        --severity LOW,MEDIUM,HIGH \
                         --exit-code 0 \
                         --quiet \
                         --format json -o trivy-image-MEDIUM-results.json
