@@ -180,7 +180,7 @@ pipeline {
                     sh  '''
                         bash integration-testing-ec2.sh
                     '''
-                
+                }
             }
         }
     }
