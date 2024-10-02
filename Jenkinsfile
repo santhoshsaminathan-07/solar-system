@@ -336,6 +336,25 @@ pipeline {
                 }
             }
         }
+
+        stage('Lambda - Invoke Function') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
+                    sh '''
+                        sleep 30s
+
+                        function_url_data=$(aws lambda get-function-url-config --function-name solar-system-function)
+
+                        function_url=$(echo $function_url_data | jq -r '.FunctionUrl | sub("/$"; "")')
+                        
+                        curl -Is  $function_url/live | grep -i "200 OK"
+                    '''
+                }
+            }
+        }
     }
 
     post {
