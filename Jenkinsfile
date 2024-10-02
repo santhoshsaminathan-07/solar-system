@@ -322,6 +322,11 @@ pipeline {
                         file: "solar-system-lambda-${BUILD_ID}.zip", 
                         bucket:'solar-system-lambda-bucket'
                     )
+                    sh """
+                        aws lambda update-function-configuration \
+                            --function-name solar-system-function  \
+                            --environment '{"Variables":{ "MONGO_USERNAME": "${MONGO_USERNAME}","MONGO_PASSWORD": "${MONGO_PASSWORD}","MONGO_URI": "${MONGO_URI}"}}'
+                    """
                     sh '''
                         aws lambda update-function-code \
                             --function-name solar-system-function \
