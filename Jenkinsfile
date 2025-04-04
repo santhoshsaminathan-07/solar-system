@@ -42,7 +42,7 @@ pipeline {
 
                 stage('OWASP Dependency Check') {
                                             agent {
-               label 'us-east-1-ubuntu-22'
+               label 'us-west-1-ubuntu-22'
               }
                     steps {
                         dependencyCheck additionalArguments: '''
@@ -75,7 +75,7 @@ pipeline {
 
         stage('Build Docker Image') {
             agent {
-               label 'us-east-1-ubuntu-22'
+               label 'us-west-1-ubuntu-22'
               }
             steps {
                 sh  'docker build -t siddharth67/solar-system:$GIT_COMMIT .'
@@ -84,7 +84,7 @@ pipeline {
 
         stage('Trivy Vulnerability Scanner') {
                         agent {
-               label 'us-east-1-ubuntu-22'
+               label 'us-west-1-ubuntu-22'
               }
             steps {
                 sh  ''' 
@@ -126,7 +126,7 @@ pipeline {
 
         stage('Push Docker Image') {
             agent {
-               label 'us-east-1-ubuntu-22'
+               label 'us-west-1-ubuntu-22'
               }
             steps {
                 withDockerRegistry(credentialsId: 'docker-hub-credentials', url: "") {
