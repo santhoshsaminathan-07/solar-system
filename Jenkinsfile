@@ -25,6 +25,12 @@ pipeline {
 
     stages {
         stage('Installing Dependencies') {
+                agent {
+        docker {
+          image 'node:18-alpine'
+          args '-u root:root'
+        }
+    }
             options { timestamps() }
             steps {
                 sh 'npm install --no-audit'
@@ -34,6 +40,12 @@ pipeline {
         stage('Dependency Scanning') {
             parallel {
                 stage('NPM Dependency Audit') {
+                                    agent {
+        docker {
+          image 'node:18-alpine'
+          args '-u root:root'
+        }
+    }
                     steps {
                         sh '''
                             npm audit --audit-level=critical
