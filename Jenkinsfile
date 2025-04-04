@@ -1,11 +1,13 @@
 pipeline {
-    agent {
-        docker {
-          image 'node:18-alpine'
-          args '-u root:root'
-        }
-    }
-
+    // agent {
+    //     docker {
+    //       image 'node:18-alpine'
+    //       args '-u root:root'
+    //     }
+    // }
+            agent {
+               label 'us-west-1-ubuntu-22'
+              }
     tools {
         nodejs 'nodejs-22-6-0'
     }
@@ -41,9 +43,6 @@ pipeline {
                 }
 
                 stage('OWASP Dependency Check') {
-                                            agent {
-               label 'us-west-1-ubuntu-22'
-              }
                     steps {
                         dependencyCheck additionalArguments: '''
                             --scan \'./\' 
@@ -74,18 +73,14 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent {
-               label 'us-west-1-ubuntu-22'
-              }
+
             steps {
                 sh  'docker build -t siddharth67/solar-system:$GIT_COMMIT .'
             }
         }
 
         stage('Trivy Vulnerability Scanner') {
-                        agent {
-               label 'us-west-1-ubuntu-22'
-              }
+
             steps {
                 sh  ''' 
                     trivy image siddharth67/solar-system:$GIT_COMMIT \
@@ -125,9 +120,7 @@ pipeline {
         } 
 
         stage('Push Docker Image') {
-            agent {
-               label 'us-west-1-ubuntu-22'
-              }
+
             steps {
                 withDockerRegistry(credentialsId: 'docker-hub-credentials', url: "") {
                     sh  'docker push siddharth67/solar-system:$GIT_COMMIT'
