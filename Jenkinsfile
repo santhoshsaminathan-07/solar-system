@@ -71,23 +71,23 @@ pipeline {
             }
         }
 
-        stage('SAST - SonarQube') {
-            steps {
-                sh 'sleep 5s'
-                // timeout(time: 60, unit: 'SECONDS') {
-                //     withSonarQubeEnv('sonar-qube-server') {
-                //         sh 'echo $SONAR_SCANNER_HOME'
-                //         sh '''
-                //             $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                //                 -Dsonar.projectKey=Solar-System-Project \
-                //                 -Dsonar.sources=app.js \
-                //                 -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
-                //         '''
-                //     }
-                //     waitForQualityGate abortPipeline: true
-                // }
-            }
-        } 
+        // stage('SAST - SonarQube') {
+        //     steps {
+        //         sh 'sleep 5s'
+        //         // timeout(time: 60, unit: 'SECONDS') {
+        //         //     withSonarQubeEnv('sonar-qube-server') {
+        //         //         sh 'echo $SONAR_SCANNER_HOME'
+        //         //         sh '''
+        //         //             $SONAR_SCANNER_HOME/bin/sonar-scanner \
+        //         //                 -Dsonar.projectKey=Solar-System-Project \
+        //         //                 -Dsonar.sources=app.js \
+        //         //                 -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+        //         //         '''
+        //         //     }
+        //         //     waitForQualityGate abortPipeline: true
+        //         // }
+        //     }
+        // } 
 
         stage('Build Docker Image') {
             steps {
@@ -143,218 +143,7 @@ pipeline {
             }
         }
 
-        stage('Deploy - AWS EC2') {
-            when {
-                branch 'feature/*'
-            }
-            steps {
-                sh 'sleep 5s'
-                // script {
-                //         sshagent(['aws-dev-deploy-ec2-instance']) {
-                //             sh '''
-                //                 ssh -o StrictHostKeyChecking=no ubuntu@3.140.244.188 "
-                //                     if sudo docker ps -a | grep -q "solar-system"; then
-                //                         echo "Container found. Stopping..."
-                //                             sudo docker stop "solar-system" && sudo docker rm "solar-system"
-                //                         echo "Container stopped and removed."
-                //                     fi
-                //                         sudo docker run --name solar-system \
-                //                             -e MONGO_URI=$MONGO_URI \
-                //                             -e MONGO_USERNAME=$MONGO_USERNAME \
-                //                             -e MONGO_PASSWORD=$MONGO_PASSWORD \
-                //                             -p 3000:3000 -d siddharth67/solar-system:$GIT_COMMIT
-                //                 "
-                //             '''
-                //     }
-                // }
-            }
-            
-        }
-
-        stage('Integration Testing - AWS EC2') {
-            when {
-                branch 'feature/*'
-            }
-            steps {
-                sh 'printenv | grep -i branch'
-                withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
-                    sh  '''
-                        bash integration-testing-ec2.sh
-                    '''
-                }
-            }
-        }
-
-        stage('K8S - Update Image Tag') {
-            when {
-                branch 'PR*'
-            }
-            steps {
-                sh 'git clone -b main http://64.227.187.25:5555/dasher-org/solar-system-gitops-argocd'
-                dir("solar-system-gitops-argocd/kubernetes") {
-                    sh '''
-                        #### Replace Docker Tag ####
-                        git checkout main
-                        git checkout -b feature-$BUILD_ID
-                        sed -i "s#siddharth67.*#siddharth67/solar-system:$GIT_COMMIT#g" deployment.yml
-                        cat deployment.yml
-                        
-                        #### Commit and Push to Feature Branch ####
-                        git config --global user.email "jenkins@dasher.com"
-                        git remote set-url origin http://$GITEA_TOKEN@64.227.187.25:5555/dasher-org/solar-system-gitops-argocd
-                        git add .
-                        git commit -am "Updated docker image"
-                        git push -u origin feature-$BUILD_ID
-                    '''
-                }
-            }
-        }
-
-        stage('K8S - Raise PR') {
-            when {
-                branch 'PR*'
-            }
-            steps {
-                sh """
-                    curl -X 'POST' \
-                        'http://64.227.187.25:5555/api/v1/repos/dasher-org/solar-system-gitops-argocd/pulls' \
-                        -H 'accept: application/json' \
-                        -H 'Authorization: token $GITEA_TOKEN' \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "assignee": "gitea-admin",
-                                "assignees": [
-                                    "gitea-admin"
-                                ],
-                            "base": "main",
-                            "body": "Updated docker image in deployment manifest",
-                            "head": "feature-$BUILD_ID",
-                            "title": "Updated Docker Image"
-                        }'
-                """
-            }
-        }
-
-        stage('App Deployed?') {
-            when {
-                branch 'PR*'
-            }
-            steps {
-                timeout(time: 1, unit: 'DAYS') {
-                    input message: 'Is the PR Merged and ArgoCD Synced?', ok: 'YES! PR is Merged and ArgoCD Application is Synced'
-                }
-            }
-        }
-
-        stage('DAST - OWASP ZAP') {
-            when {
-                branch 'PR*'
-            }
-            steps {
-                sh '''
-                    #### REPLACE below with Kubernetes http://IP_Address:30000/api-docs/ #####
-                    chmod 777 $(pwd)
-                    docker run -v $(pwd):/zap/wrk/:rw  ghcr.io/zaproxy/zaproxy zap-api-scan.py \
-                    -t http://134.209.155.222:30000/api-docs/ \
-                    -f openapi \
-                    -r zap_report.html \
-                    -w zap_report.md \
-                    -J zap_json_report.json \
-                    -x zap_xml_report.xml \
-                    -c zap_ignore_rules
-                '''
-            }
-        }
-
-        stage('Upload - AWS S3') {
-            when {
-                branch 'PR*'
-            }
-            steps {
-                withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
-                    sh  '''
-                        ls -ltr
-                        mkdir reports-$BUILD_ID
-                        cp -rf coverage/ reports-$BUILD_ID/
-                        cp dependency*.* test-results.xml trivy*.* zap*.* reports-$BUILD_ID/
-                        ls -ltr reports-$BUILD_ID/
-                    '''
-                    s3Upload(
-                        file:"reports-$BUILD_ID", 
-                        bucket:'solar-system-jenkins-reports-bucket', 
-                        path:"jenkins-$BUILD_ID/"
-                    )
-                }
-            }
-        } 
-
-        stage('Deploy to Prod?') {
-            when {
-                branch 'main'
-            }
-            steps {
-                timeout(time: 1, unit: 'DAYS') {
-                    input message: 'Deploy to Production?', ok: 'YES! Let us try this on Production', submitter: 'admin'
-                }
-            }
-        }
-
-        stage('Lambda - S3 Upload & Deploy') {
-            when {
-                branch 'main'
-            }
-            steps {
-                withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
-                    sh '''
-                        tail -5 app.js
-                        echo "******************************************************************"
-                        sed -i "/^app\\.listen(3000/ s/^/\\/\\//" app.js
-                        sed -i "s/^module.exports = app;/\\/\\/module.exports = app;/g" app.js
-                        sed -i "s|^//module.exports.handler|module.exports.handler|" app.js
-                        echo "******************************************************************"
-                        tail -5 app.js
-                    '''
-                    sh  '''
-                        zip -qr solar-system-lambda-$BUILD_ID.zip app* package* index.html node*
-                        ls -ltr solar-system-lambda-$BUILD_ID.zip
-                    '''
-                    s3Upload(
-                        file: "solar-system-lambda-${BUILD_ID}.zip", 
-                        bucket:'solar-system-lambda-bucket'
-                    )
-                    sh """
-                        aws lambda update-function-configuration \
-                            --function-name solar-system-function  \
-                            --environment '{"Variables":{ "MONGO_USERNAME": "${MONGO_USERNAME}","MONGO_PASSWORD": "${MONGO_PASSWORD}","MONGO_URI": "${MONGO_URI}"}}'
-                    """
-                    sh '''
-                        aws lambda update-function-code \
-                            --function-name solar-system-function \
-                            --s3-bucket solar-system-lambda-bucket \
-                            --s3-key solar-system-lambda-$BUILD_ID.zip
-                    '''
-                }
-            }
-        }
-
-        stage('Lambda - Invoke Function') {
-            when {
-                branch 'main'
-            }
-            steps {
-                withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
-                    sh '''
-                        sleep 30s
-
-                        function_url_data=$(aws lambda get-function-url-config --function-name solar-system-function)
-
-                        function_url=$(echo $function_url_data | jq -r '.FunctionUrl | sub("/$"; "")')
-                        
-                        curl -Is  $function_url/live | grep -i "200 OK"
-                    '''
-                }
-            }
-        }
+       
     }
 
     post {
