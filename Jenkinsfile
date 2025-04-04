@@ -70,6 +70,12 @@ pipeline {
         }
 
         stage('Unit Testing') {
+                            agent {
+        docker {
+          image 'node:18-alpine'
+          args '-u root:root'
+        }
+    }
             options { retry(2) }
             steps {
                 sh 'npm test' 
@@ -77,6 +83,12 @@ pipeline {
         }    
 
         stage('Code Coverage') {
+                            agent {
+        docker {
+          image 'node:18-alpine'
+          args '-u root:root'
+        }
+    }
             steps {
                 catchError(buildResult: 'SUCCESS', message: 'Oops! it will be fixed in future releases', stageResult: 'UNSTABLE') {
                     sh 'npm run coverage'
