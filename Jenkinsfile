@@ -41,6 +41,9 @@ pipeline {
                 }
 
                 stage('OWASP Dependency Check') {
+                                            agent {
+               label 'us-east-1-ubuntu-22'
+              }
                     steps {
                         dependencyCheck additionalArguments: '''
                             --scan \'./\' 
@@ -75,7 +78,6 @@ pipeline {
                label 'us-east-1-ubuntu-22'
               }
             steps {
-                sh  'printenv'
                 sh  'docker build -t siddharth67/solar-system:$GIT_COMMIT .'
             }
         }
