@@ -38,12 +38,12 @@ pipeline {
         stage('Dependency Scanning') {
             parallel {
                 stage('NPM Dependency Audit') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            args '-u root:root'
-                        }
-                    }
+                    // agent {
+                    //     docker {
+                    //         image 'node:18-alpine'
+                    //         args '-u root:root'
+                    //     }
+                    // }
                     steps {
                         sh '''
                             npm audit --audit-level=critical
