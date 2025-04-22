@@ -46,7 +46,8 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            npm audit --audit-level=critical
+                            npm audit 
+                            ## npm audit --audit-level=critical
                             echo $?
                         '''
                     }
