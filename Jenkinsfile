@@ -14,7 +14,7 @@ pipeline {
         stage('Installing Dependencies') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:24'
                     args '-u root:root'
                 }
             }
@@ -49,7 +49,7 @@ pipeline {
         stage('Unit Testing') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:24'
                     args '-u root:root'
                 }
             }
@@ -64,7 +64,7 @@ pipeline {
         stage('Code Coverage') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:24'
                     args '-u root:root'
                 }
             }
@@ -102,7 +102,7 @@ pipeline {
 // pipeline {
 //     // agent {
 //     //     docker {
-//     //       image 'node:18-alpine'
+//     //       image 'node:24'
 //     //       args '-u root:root'
 //     //     }
 //     // }
@@ -124,7 +124,7 @@ pipeline {
 //         stage('Installing Dependencies') {
 //             agent {
 //                 docker {
-//                     image 'node:18-alpine'
+//                     image 'node:24'
 //                     args '-u root:root'
 //                 }
 //             }
@@ -140,7 +140,7 @@ pipeline {
 //                 stage('NPM Dependency Audit') {
 //                     // agent {
 //                     //     docker {
-//                     //         image 'node:18-alpine'
+//                     //         image 'node:24'
 //                     //         args '-u root:root'
 //                     //     }
 //                     // }
@@ -167,7 +167,7 @@ pipeline {
 //         stage('Unit Testing') {
 //             agent {
 //                 docker {
-//                     image 'node:18-alpine'
+//                     image 'node:24'
 //                     args '-u root:root'
 //                 }
 //             }
@@ -181,7 +181,7 @@ pipeline {
 //         stage('Code Coverage') {
 //             agent {
 //                 docker {
-//                     image 'node:18-alpine'
+//                     image 'node:24'
 //                     args '-u root:root'
 //                 }
 //             }
